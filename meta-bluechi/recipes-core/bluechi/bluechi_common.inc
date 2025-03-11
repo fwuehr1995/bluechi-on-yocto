@@ -6,9 +6,6 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-SRC_URI = "gitsm://github.com/eclipse-bluechi/bluechi.git;protocol=https;branch=main"
-SRCREV = "1fc774161570db0d115543b96c549f7dd9deb20d"
-
 S = "${WORKDIR}/git"
 
 DEPENDS=" \
