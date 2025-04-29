@@ -2,7 +2,7 @@ header:
   version: 14
 machine: generic
 local_conf_header:
-  default: | 
+  default: |
     INHERIT += "extrausers"
     # user setup
     EXTRA_USERS_PARAMS = "usermod -p '' root;"

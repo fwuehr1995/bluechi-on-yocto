@@ -8,10 +8,10 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 S = "${WORKDIR}/git"
 
-DEPENDS=" \
-  sdbus-c++ \
-  glib-2.0 \
-  ninja \
+DEPENDS = " \
+    sdbus-c++ \
+    glib-2.0 \
+    ninja \
 "
 
 EXTRA_OEMESON = "-Dwerror=false ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', '', '-Dwith_selinux=false', d)}"
@@ -23,6 +23,7 @@ SYSTEMD_SERVICE:${PN} = " bluechi-controller.service bluechi-agent.service"
 
 SRC_URI += "file://bluechi-controller.conf"
 SRC_URI += "file://bluechi-agent.conf"
+SRC_URI += "file://bluechi-run-dir.conf"
 
 inherit pkgconfig cmake meson systemd overlayfs
 
@@ -32,9 +33,15 @@ do_install:append() {
     else
         CFG_DIR=${WORKDIR}
     fi
-
+    
+    # copy bluechi config files (controller + local agent)
     install -D ${CFG_DIR}/bluechi-controller.conf ${D}/etc/bluechi/controller.conf.d/00-default.conf
     install -D ${CFG_DIR}/bluechi-agent.conf ${D}/etc/bluechi/agent.conf.d/00-default.conf
+    
+    # setup /run/bluechi via systemd
+    rmdir ${D}/run/bluechi
+    rmdir ${D}/run
+    install -D ${CFG_DIR}/bluechi-run-dir.conf  ${D}${libdir}/tmpfiles.d/bluechi-run-dir.conf
 }
 
 REQUIRED_DISTRO_FEATURES += "systemd"
