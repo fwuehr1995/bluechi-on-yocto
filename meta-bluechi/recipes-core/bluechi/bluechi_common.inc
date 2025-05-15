@@ -1,47 +1,34 @@
 SUMMARY = "recipe to install eclipse-bluechi"
 DESCRIPTION = "install eclipe bluechi"
-
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
-
-FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
-
-S = "${WORKDIR}/git"
-
 DEPENDS = " \
     sdbus-c++ \
     glib-2.0 \
     ninja \
 "
 
-EXTRA_OEMESON = "-Dwerror=false ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', '', '-Dwith_selinux=false', d)}"
+SRC_URI:append = " file://bluechi-controller.conf file://bluechi-agent.conf file://bluechi-run-dir.conf"
 
-FILES:${PN} += "${libdir}/* ${datadir}/* ${sysconfdir}/*"
+S = "${WORKDIR}/git"
 
 SYSTEMD_PACKAGES = "${PN}"
 SYSTEMD_SERVICE:${PN} = " bluechi-controller.service bluechi-agent.service"
 
-SRC_URI += "file://bluechi-controller.conf"
-SRC_URI += "file://bluechi-agent.conf"
-SRC_URI += "file://bluechi-run-dir.conf"
-
 inherit pkgconfig cmake meson systemd overlayfs
 
+EXTRA_OEMESON = "-Dwerror=false ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', '', '-Dwith_selinux=false', d)}"
+
 do_install:append() {
-    if [ -d ${WORKDIR}/sources-unpack ]; then
-        CFG_DIR=${WORKDIR}/sources-unpack
-    else
-        CFG_DIR=${WORKDIR}
-    fi
-    
     # copy bluechi config files (controller + local agent)
-    install -D ${CFG_DIR}/bluechi-controller.conf ${D}/etc/bluechi/controller.conf.d/00-default.conf
-    install -D ${CFG_DIR}/bluechi-agent.conf ${D}/etc/bluechi/agent.conf.d/00-default.conf
-    
-    # setup /run/bluechi via systemd
+    install -D ${UNPACKDIR}/bluechi-controller.conf ${D}/etc/bluechi/controller.conf.d/00-default.conf
+    install -D ${UNPACKDIR}/bluechi-agent.conf ${D}/etc/bluechi/agent.conf.d/00-default.conf
+
+    # setup bluechi runtime directory via systemd-tmpfiles
+    # fix QA error: runtimedir is expected to be empty [empty-dirs]
     rmdir ${D}/run/bluechi
     rmdir ${D}/run
-    install -D ${CFG_DIR}/bluechi-run-dir.conf  ${D}${libdir}/tmpfiles.d/bluechi-run-dir.conf
+    install -D ${UNPACKDIR}/bluechi-run-dir.conf  ${D}${libdir}/tmpfiles.d/bluechi-run-dir.conf
 }
 
-REQUIRED_DISTRO_FEATURES += "systemd"
+FILES:${PN} += "${libdir}/* ${datadir}/* ${sysconfdir}/*"
